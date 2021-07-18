@@ -11,5 +11,5 @@ system information fetcher written in Go (stdlib only).
 $ sif -h
 Usage of sif:
   -s string
-    	comma-separated list of display attributes (default "italic,yellow")
+    	comma-separated list of display attributes (default "italic")
 ```
