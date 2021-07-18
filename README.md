@@ -1,10 +1,9 @@
 # sif
 
 An incomplete, opinionated, and unnecessarily concurrent
-system information fetcher written in Go.
-Standard library only.
+system information fetcher written in Go (stdlib only).
 
-![sif screenshot](assets/carbon.png)
+![sif screenshot](assets/carbon.svg)
 
 ## Usage
 
