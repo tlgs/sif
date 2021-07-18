@@ -1,9 +1,13 @@
+<div style="text-align: center">
+
 # sif
 
 An incomplete, opinionated, and unnecessarily concurrent
 system information fetcher written in Go (stdlib only).
 
-![sif screenshot](assets/carbon.svg)
+![sif screenshot](assets/carbon.png)
+
+</div>
 
 ## Usage
 
