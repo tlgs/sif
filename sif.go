@@ -51,8 +51,7 @@ func fetchCPU() string {
 	re := regexp.MustCompile(`model name\s*: (.*)\n`)
 	cpu := string(re.FindSubmatch(text)[1])
 
-	cpu = regexp.MustCompile(`\(.*\)`).ReplaceAllString(cpu, "")
-	cpu = regexp.MustCompile(`@.*`).ReplaceAllString(cpu, "")
+	cpu = regexp.MustCompile(`\(.*\)|@.*`).ReplaceAllString(cpu, "")
 	cpu = strings.TrimSuffix(cpu, " CPU ")
 
 	return cpu
