@@ -9,30 +9,35 @@ import (
 	"strings"
 )
 
-func fetchOS(c chan<- string) {
+type Info struct {
+	Key   string
+	Value string
+}
+
+func fetchOS(c chan<- Info) {
 	text, _ := os.ReadFile("/etc/os-release")
 
 	re := regexp.MustCompile(`PRETTY_NAME="+(.*)"+\n`)
 	osName := string(re.FindSubmatch(text)[1])
 
-	c <- osName
+	c <- Info{"os", osName}
 }
 
-func fetchKernel(c chan<- string) {
-	out, _ := exec.Command("uname", "-r").CombinedOutput()
-	kernel := strings.TrimSpace(string(out))
+func fetchKernel(c chan<- Info) {
+	text, _ := os.ReadFile("/proc/version")
+	kernel := strings.Split(string(text), " ")[2]
 
-	c <- kernel
+	c <- Info{"kernel", kernel}
 }
 
-func fetchHost(c chan<- string) {
+func fetchHost(c chan<- Info) {
 	text, _ := os.ReadFile("/sys/devices/virtual/dmi/id/product_version")
 	host := strings.TrimSpace(string(text))
 
-	c <- host
+	c <- Info{"host", host}
 }
 
-func fetchCPU(c chan<- string) {
+func fetchCPU(c chan<- Info) {
 	text, _ := os.ReadFile("/proc/cpuinfo")
 
 	re := regexp.MustCompile(`model name\s*: (.*)\n`)
@@ -41,10 +46,10 @@ func fetchCPU(c chan<- string) {
 	cpu = regexp.MustCompile(`\(.*\)|@.*`).ReplaceAllString(cpu, "")
 	cpu = strings.TrimSuffix(cpu, " CPU ")
 
-	c <- cpu
+	c <- Info{"cpu", cpu}
 }
 
-func fetchGPU(c chan<- string) {
+func fetchGPU(c chan<- Info) {
 	out, _ := exec.Command("lspci").CombinedOutput()
 
 	re := regexp.MustCompile(`VGA.*: (.*) \(`)
@@ -52,10 +57,10 @@ func fetchGPU(c chan<- string) {
 
 	gpu = strings.ReplaceAll(gpu, "Corporation ", "")
 
-	c <- gpu
+	c <- Info{"gpu", gpu}
 }
 
-func fetchWM(c chan<- string) {
+func fetchWM(c chan<- Info) {
 	cmd := exec.Command("xprop", "-root", "_NET_SUPPORTING_WM_CHECK")
 	out, _ := cmd.CombinedOutput()
 
@@ -67,7 +72,7 @@ func fetchWM(c chan<- string) {
 	re := regexp.MustCompile(`.*= "+(.*)"+`)
 	wm := string(re.FindSubmatch(out)[1])
 
-	c <- wm
+	c <- Info{"wm", wm}
 }
 
 func parseDisplayAttrs(s string) string {
@@ -108,28 +113,30 @@ func main() {
 	s := flag.String("s", "italic", "comma-separated list of display attributes")
 	flag.Parse()
 
-	var c []chan string
-	for i := 0; i < 6; i++ {
-		c = append(c, make(chan string))
-	}
-
-	go fetchOS(c[0])
-	go fetchKernel(c[1])
-	go fetchHost(c[2])
-	go fetchCPU(c[3])
-	go fetchGPU(c[4])
-	go fetchWM(c[5])
+	c := make(chan Info)
+	go fetchOS(c)
+	go fetchKernel(c)
+	go fetchHost(c)
+	go fetchCPU(c)
+	go fetchGPU(c)
+	go fetchWM(c)
 
 	style := parseDisplayAttrs(*s)
 	f := func(v string) string { return style + v + "\x1b[0m" }
 
+	sys := make(map[string]string)
+	for i := 0; i < 6; i++ {
+		x := <-c
+		sys[x.Key] = x.Value
+	}
+
 	fmt.Println()
-	fmt.Printf("%15s │ %s\n", "os", f(<-c[0]))
-	fmt.Printf("%15s │ %s\n", "kernel", f(<-c[1]))
+	fmt.Printf("%15s │ %s\n", "os", f(sys["os"]))
+	fmt.Printf("%15s │ %s\n", "kernel", f(sys["kernel"]))
 	fmt.Printf("%15s │\n", "")
-	fmt.Printf("%15s │ %s\n", "host", f(<-c[2]))
-	fmt.Printf("%15s │ %s\n", "cpu", f(<-c[3]))
-	fmt.Printf("%15s │ %s\n", "gpu", f(<-c[4]))
+	fmt.Printf("%15s │ %s\n", "host", f(sys["host"]))
+	fmt.Printf("%15s │ %s\n", "cpu", f(sys["cpu"]))
+	fmt.Printf("%15s │ %s\n", "gpu", f(sys["gpu"]))
 	fmt.Printf("%15s │\n", "")
-	fmt.Printf("%15s │ %s\n", "wm", f(<-c[5]))
+	fmt.Printf("%15s │ %s\n", "wm", f(sys["wm"]))
 }
