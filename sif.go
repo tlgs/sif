@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func fetchOS(c chan string) {
+func fetchOS(c chan<- string) {
 	text, _ := os.ReadFile("/etc/os-release")
 
 	re := regexp.MustCompile(`PRETTY_NAME="+(.*)"+\n`)
@@ -18,21 +18,21 @@ func fetchOS(c chan string) {
 	c <- osName
 }
 
-func fetchKernel(c chan string) {
+func fetchKernel(c chan<- string) {
 	out, _ := exec.Command("uname", "-r").CombinedOutput()
 	kernel := strings.TrimSpace(string(out))
 
 	c <- kernel
 }
 
-func fetchHost(c chan string) {
+func fetchHost(c chan<- string) {
 	text, _ := os.ReadFile("/sys/devices/virtual/dmi/id/product_version")
 	host := strings.TrimSpace(string(text))
 
 	c <- host
 }
 
-func fetchCPU(c chan string) {
+func fetchCPU(c chan<- string) {
 	text, _ := os.ReadFile("/proc/cpuinfo")
 
 	re := regexp.MustCompile(`model name\s*: (.*)\n`)
@@ -44,7 +44,7 @@ func fetchCPU(c chan string) {
 	c <- cpu
 }
 
-func fetchGPU(c chan string) {
+func fetchGPU(c chan<- string) {
 	out, _ := exec.Command("lspci").CombinedOutput()
 
 	re := regexp.MustCompile(`VGA.*: (.*) \(`)
@@ -55,7 +55,7 @@ func fetchGPU(c chan string) {
 	c <- gpu
 }
 
-func fetchWM(c chan string) {
+func fetchWM(c chan<- string) {
 	cmd := exec.Command("xprop", "-root", "_NET_SUPPORTING_WM_CHECK")
 	out, _ := cmd.CombinedOutput()
 
@@ -70,7 +70,7 @@ func fetchWM(c chan string) {
 	c <- wm
 }
 
-func ParseDisplayAttrs(s string) string {
+func parseDisplayAttrs(s string) string {
 	const esc = "\x1b["
 	ansi := map[string]string{
 		"bold":          esc + "1m",
@@ -120,7 +120,7 @@ func main() {
 	go fetchGPU(c[4])
 	go fetchWM(c[5])
 
-	style := ParseDisplayAttrs(*s)
+	style := parseDisplayAttrs(*s)
 	f := func(v string) string { return style + v + "\x1b[0m" }
 
 	fmt.Println()

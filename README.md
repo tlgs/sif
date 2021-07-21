@@ -1,7 +1,7 @@
 # sif
 
-An incomplete, opinionated, and unnecessarily concurrent
-system information fetcher written in Go (stdlib only).
+A non-portable, incomplete, opinionated, and unnecessarily concurrent
+system information fetcher written in Go.
 
 ![sif screenshot](assets/carbon.png)
 
