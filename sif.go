@@ -110,7 +110,7 @@ func parseDisplayAttrs(s string) string {
 }
 
 func main() {
-	s := flag.String("s", "italic", "comma-separated list of display attributes")
+	s := flag.String("s", "magenta", "comma-separated list of display attributes")
 	flag.Parse()
 
 	c := make(chan Info)
