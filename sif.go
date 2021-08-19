@@ -72,6 +72,11 @@ func fetchWM(c chan<- Info) {
 	re := regexp.MustCompile(`.*= "+(.*)"+`)
 	wm := string(re.FindSubmatch(out)[1])
 
+	switch wm {
+	case "GNOME Shell":
+		wm = "Mutter"
+	}
+
 	c <- Info{"wm", wm}
 }
 
