@@ -3,7 +3,7 @@
 A non-portable, incomplete, opinionated, and unnecessarily concurrent
 system information fetcher written in Go.
 
-![sif screenshot](assets/carbon.png)
+![sif screenshot](assets/example.png)
 
 ## Usage
 
@@ -11,5 +11,5 @@ system information fetcher written in Go.
 $ sif -h
 Usage of sif:
   -s string
-    	comma-separated list of display attributes (default "italic")
+    	comma-separated list of display attributes (default "magenta")
 ```
