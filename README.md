@@ -15,12 +15,3 @@ $ sif
                 │
              wm │ Mutter
 ```
-
-## Usage
-
-```console
-$ sif -h
-Usage of sif:
-  -s string
-    	comma-separated list of display attributes (default "magenta")
-```
