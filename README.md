@@ -14,3 +14,9 @@ $ sif
             gpu │ Intel HD Graphics 620
             mem │ 7714 MiB
 ```
+
+## Installation
+
+```console
+$ go install github.com/tlgs/sif@v0.2.0
+```
