@@ -1,11 +1,11 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -60,88 +60,37 @@ func fetchGPU(c chan<- Info) {
 	c <- Info{"gpu", gpu}
 }
 
-func fetchWM(c chan<- Info) {
-	cmd := exec.Command("xprop", "-root", "_NET_SUPPORTING_WM_CHECK")
-	out, _ := cmd.CombinedOutput()
+func fetchMem(c chan<- Info) {
+	text, _ := os.ReadFile("/proc/meminfo")
 
-	rootID := regexp.MustCompile(`.* `).ReplaceAllString(string(out), "")
+	re := regexp.MustCompile(`MemTotal:\s*(\d*) kB`)
+	x, _ := strconv.Atoi(string(re.FindSubmatch(text)[1]))
 
-	cmd = exec.Command("xprop", "-id", string(rootID), "_NET_WM_NAME")
-	out, _ = cmd.CombinedOutput()
+	mem := fmt.Sprintf("%v MiB", x/1024)
 
-	re := regexp.MustCompile(`.*= "+(.*)"+`)
-	wm := string(re.FindSubmatch(out)[1])
-
-	switch wm {
-	case "GNOME Shell":
-		wm = "Mutter"
-	}
-
-	c <- Info{"wm", wm}
-}
-
-func parseDisplayAttrs(s string) string {
-	const esc = "\x1b["
-	ansi := map[string]string{
-		"bold":          esc + "1m",
-		"faint":         esc + "2m",
-		"italic":        esc + "3m",
-		"underline":     esc + "4m",
-		"blink":         esc + "6m",
-		"inverse":       esc + "7m",
-		"invisible":     esc + "8m",
-		"strikethrough": esc + "9m",
-
-		"black":   esc + "30m",
-		"red":     esc + "31m",
-		"green":   esc + "32m",
-		"yellow":  esc + "33m",
-		"blue":    esc + "34m",
-		"magenta": esc + "35m",
-		"cyan":    esc + "36m",
-		"white":   esc + "37m",
-	}
-
-	attrs := strings.Split(s, ",")
-
-	var r string
-	for _, v := range attrs {
-		if seq, ok := ansi[v]; ok {
-			r += seq
-		}
-	}
-
-	return r
+	c <- Info{"mem", mem}
 }
 
 func main() {
-	s := flag.String("s", "magenta", "comma-separated list of display attributes")
-	flag.Parse()
+	fetches := []func(chan<- Info){fetchOS, fetchKernel, fetchHost, fetchCPU, fetchGPU, fetchMem}
 
 	c := make(chan Info)
-	go fetchOS(c)
-	go fetchKernel(c)
-	go fetchHost(c)
-	go fetchCPU(c)
-	go fetchGPU(c)
-	go fetchWM(c)
-
-	style := parseDisplayAttrs(*s)
-	f := func(v string) string { return style + v + "\x1b[0m" }
+	for _, f := range fetches {
+		go f(c)
+	}
 
 	sys := make(map[string]string)
-	for i := 0; i < 6; i++ {
+	for i := 0; i < len(fetches); i++ {
 		x := <-c
 		sys[x.Key] = x.Value
 	}
 
 	fmt.Println()
-	fmt.Printf("%15s │ %s\n", "os", f(sys["os"]))
-	fmt.Printf("%15s │ %s\n", "kernel", f(sys["kernel"]))
-	fmt.Printf("%15s │\n", "")
-	fmt.Printf("%15s │ %s\n", "host", f(sys["host"]))
-	fmt.Printf("%15s │ %s\n", "cpu", f(sys["cpu"]))
-	fmt.Printf("%15s │ %s\n", "gpu", f(sys["gpu"]))
-	fmt.Printf("%15s │\n", "")
-	fmt.Printf("%15s │ %s\n", "wm", f(sys["wm"]))
+	fmt.Printf("%15v │ %v\n", "os", sys["os"])
+	fmt.Printf("%15v │ %v\n", "kernel", sys["kernel"])
+	fmt.Printf("%15v │\n", "")
+	fmt.Printf("%15v │ %v\n", "host", sys["host"])
+	fmt.Printf("%15v │ %v\n", "cpu", sys["cpu"])
+	fmt.Printf("%15v │ %v\n", "gpu", sys["gpu"])
+	fmt.Printf("%15v │ %v\n", "mem", sys["mem"])
 }

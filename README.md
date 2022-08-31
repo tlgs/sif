@@ -12,6 +12,5 @@ $ sif
            host │ ThinkPad X1 Carbon 5th
             cpu │ Intel i5-7200U
             gpu │ Intel HD Graphics 620
-                │
-             wm │ Mutter
+            mem │ 7714 MiB
 ```
