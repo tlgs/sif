@@ -91,26 +91,27 @@ func fetchMem(c chan<- result) {
 	}
 
 	re := regexp.MustCompile(`MemTotal:\s*(\d*) kB`)
-	x, err := strconv.Atoi(string(re.FindSubmatch(text)[1]))
+	n, err := strconv.Atoi(string(re.FindSubmatch(text)[1]))
 	if err != nil {
 		c <- result{err: err}
+		return
 	}
 
-	mem := fmt.Sprintf("%v MiB", x/1024)
+	mem := fmt.Sprintf("%v MiB", n/1024)
 
 	c <- result{"mem", mem, nil}
 }
 
 func main() {
-	fetches := []func(chan<- result){fetchOS, fetchKernel, fetchHost, fetchCPU, fetchGPU, fetchMem}
+	fetchers := []func(chan<- result){fetchOS, fetchKernel, fetchHost, fetchCPU, fetchGPU, fetchMem}
 
 	c := make(chan result)
-	for _, f := range fetches {
+	for _, f := range fetchers {
 		go f(c)
 	}
 
 	sys := make(map[string]string)
-	for i := 0; i < len(fetches); i++ {
+	for range fetchers {
 		x := <-c
 		if x.err != nil {
 			panic(x.err)
