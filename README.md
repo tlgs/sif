@@ -7,12 +7,13 @@ system information fetcher written in Go.
 $ sif
 
              os │ Arch Linux
-         kernel │ 5.15.4-arch1-1
+         kernel │ 5.19.5-arch1-1
                 │
            host │ ThinkPad X1 Carbon 5th
             cpu │ Intel i5-7200U
             gpu │ Intel HD Graphics 620
             mem │ 7714 MiB
+
 ```
 
 ## Installation

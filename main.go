@@ -128,4 +128,5 @@ func main() {
 	fmt.Printf("%15v │ %v\n", "cpu", sys["cpu"])
 	fmt.Printf("%15v │ %v\n", "gpu", sys["gpu"])
 	fmt.Printf("%15v │ %v\n", "mem", sys["mem"])
+	fmt.Println()
 }
