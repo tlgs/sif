@@ -9,36 +9,55 @@ import (
 	"strings"
 )
 
-type Info struct {
-	Key   string
-	Value string
+type result struct {
+	key   string
+	value string
+	err   error
 }
 
-func fetchOS(c chan<- Info) {
-	text, _ := os.ReadFile("/etc/os-release")
+func fetchOS(c chan<- result) {
+	text, err := os.ReadFile("/etc/os-release")
+	if err != nil {
+		c <- result{err: err}
+		return
+	}
 
 	re := regexp.MustCompile(`PRETTY_NAME="+(.*)"+\n`)
 	osName := string(re.FindSubmatch(text)[1])
 
-	c <- Info{"os", osName}
+	c <- result{"os", osName, nil}
 }
 
-func fetchKernel(c chan<- Info) {
-	text, _ := os.ReadFile("/proc/version")
+func fetchKernel(c chan<- result) {
+	text, err := os.ReadFile("/proc/version")
+	if err != nil {
+		c <- result{err: err}
+		return
+	}
+
 	kernel := strings.Split(string(text), " ")[2]
 
-	c <- Info{"kernel", kernel}
+	c <- result{"kernel", kernel, nil}
 }
 
-func fetchHost(c chan<- Info) {
-	text, _ := os.ReadFile("/sys/devices/virtual/dmi/id/product_version")
+func fetchHost(c chan<- result) {
+	text, err := os.ReadFile("/sys/devices/virtual/dmi/id/product_version")
+	if err != nil {
+		c <- result{err: err}
+		return
+	}
+
 	host := strings.TrimSpace(string(text))
 
-	c <- Info{"host", host}
+	c <- result{"host", host, nil}
 }
 
-func fetchCPU(c chan<- Info) {
-	text, _ := os.ReadFile("/proc/cpuinfo")
+func fetchCPU(c chan<- result) {
+	text, err := os.ReadFile("/proc/cpuinfo")
+	if err != nil {
+		c <- result{err: err}
+		return
+	}
 
 	re := regexp.MustCompile(`model name\s*: (.*)\n`)
 	cpu := string(re.FindSubmatch(text)[1])
@@ -46,35 +65,46 @@ func fetchCPU(c chan<- Info) {
 	cpu = regexp.MustCompile(`\(.*\)|@.*`).ReplaceAllString(cpu, "")
 	cpu = strings.TrimSuffix(cpu, " CPU ")
 
-	c <- Info{"cpu", cpu}
+	c <- result{"cpu", cpu, nil}
 }
 
-func fetchGPU(c chan<- Info) {
-	out, _ := exec.Command("lspci").CombinedOutput()
+func fetchGPU(c chan<- result) {
+	out, err := exec.Command("lspci").CombinedOutput()
+	if err != nil {
+		c <- result{err: err}
+		return
+	}
 
 	re := regexp.MustCompile(`VGA.*: (.*) \(`)
 	gpu := string(re.FindSubmatch(out)[1])
 
 	gpu = strings.ReplaceAll(gpu, "Corporation ", "")
 
-	c <- Info{"gpu", gpu}
+	c <- result{"gpu", gpu, nil}
 }
 
-func fetchMem(c chan<- Info) {
-	text, _ := os.ReadFile("/proc/meminfo")
+func fetchMem(c chan<- result) {
+	text, err := os.ReadFile("/proc/meminfo")
+	if err != nil {
+		c <- result{err: err}
+		return
+	}
 
 	re := regexp.MustCompile(`MemTotal:\s*(\d*) kB`)
-	x, _ := strconv.Atoi(string(re.FindSubmatch(text)[1]))
+	x, err := strconv.Atoi(string(re.FindSubmatch(text)[1]))
+	if err != nil {
+		c <- result{err: err}
+	}
 
 	mem := fmt.Sprintf("%v MiB", x/1024)
 
-	c <- Info{"mem", mem}
+	c <- result{"mem", mem, nil}
 }
 
 func main() {
-	fetches := []func(chan<- Info){fetchOS, fetchKernel, fetchHost, fetchCPU, fetchGPU, fetchMem}
+	fetches := []func(chan<- result){fetchOS, fetchKernel, fetchHost, fetchCPU, fetchGPU, fetchMem}
 
-	c := make(chan Info)
+	c := make(chan result)
 	for _, f := range fetches {
 		go f(c)
 	}
@@ -82,7 +112,11 @@ func main() {
 	sys := make(map[string]string)
 	for i := 0; i < len(fetches); i++ {
 		x := <-c
-		sys[x.Key] = x.Value
+		if x.err != nil {
+			panic(x.err)
+		}
+
+		sys[x.key] = x.value
 	}
 
 	fmt.Println()
