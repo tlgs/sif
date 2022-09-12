@@ -6,13 +6,13 @@ system information fetcher written in Go.
 ```console
 $ sif
 
-             os │ Arch Linux
-         kernel │ 5.19.5-arch1-1
+             os │ Ubuntu 22.04.1 LTS
+         kernel │ 5.15.0-1019-aws
                 │
-           host │ ThinkPad X1 Carbon 5th
-            cpu │ Intel i5-7200U
-            gpu │ Intel HD Graphics 620
-            mem │ 7714 MiB
+           host │ 4.11.amazon
+            cpu │ Intel CPU E5-2676 v3
+            gpu │ Cirrus Logic GD 5446
+            mem │ 966 MiB
 
 ```
 
