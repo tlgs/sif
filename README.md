@@ -19,5 +19,5 @@ $ sif
 ## Installation
 
 ```console
-$ go install github.com/tlgs/sif@v0.2.1
+$ go install github.com/tlgs/sif@v0.2.2
 ```
