@@ -6,18 +6,17 @@ system information fetcher written in Go.
 ```console
 $ sif
 
-             os │ Ubuntu 22.04.1 LTS
-         kernel │ 5.15.0-1019-aws
+             os │ Pop!_OS 22.04 LTS
+         kernel │ 6.0.6-76060006-generic
                 │
-           host │ 4.11.amazon
-            cpu │ Intel CPU E5-2676 v3
-            gpu │ Cirrus Logic GD 5446
-            mem │ 966 MiB
-
+           host │ ThinkBook 14 G2 ITL
+            cpu │ 11th Gen Intel i5-1135G7
+            gpu │ Intel TigerLake-LP GT2
+            mem │ 15784 MiB
 ```
 
 ## Installation
 
 ```console
-$ go install github.com/tlgs/sif@v0.2.2
+$ go install github.com/tlgs/sif@v0.2.3
 ```

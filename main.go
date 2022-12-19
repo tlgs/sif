@@ -75,7 +75,7 @@ func fetchGPU(c chan<- result) {
 		return
 	}
 
-	re := regexp.MustCompile(`VGA compatible controller: ([[:alnum:] ]*[[:alnum:]])`)
+	re := regexp.MustCompile(`VGA compatible controller: ([a-zA-Z0-9 -]*[a-zA-Z0-9])`)
 	gpu := string(re.FindSubmatch(out)[1])
 
 	gpu = strings.ReplaceAll(gpu, "Corporation ", "")
